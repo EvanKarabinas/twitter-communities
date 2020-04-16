@@ -71,7 +71,7 @@ field_names = ["followee_id", "followee_name", "follower_id", "follower_name"]
 with open(f"{sys.argv[1]}_followers_graph_new.csv", 'w') as followers_csv:
     csv_writer = csv.writer(followers_csv)
     csv_writer.writerow(field_names)
-    expand_graph(3, [100, 20, 20], starting_user, csv_writer, followers_csv)
+    expand_graph(3, [200, 20, 10], starting_user, csv_writer, followers_csv)
 
 end_time = time.time()
 print(tf.format(start_time, end_time))
