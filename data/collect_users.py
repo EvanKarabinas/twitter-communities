@@ -1,4 +1,3 @@
-import config
 import tweepy
 import csv
 import time
@@ -6,6 +5,11 @@ import timeformatter as tf
 import sys
 import psycopg2
 import threading
+import os
+import sys
+import inspect
+sys.path.append(os.path.abspath(os.path.join('..', 'config')))
+import config  # nopep8
 
 
 class User:
@@ -21,7 +25,7 @@ def fetch_followers(thread_id, api, users, sample_size, cur, level, followers):
 
     # Connect to DB
     connection = psycopg2.connect(
-        database=congig.db_name, user=config.db_user, host=config.db_host)
+        database=config.db_name, user=config.db_user, host=config.db_host)
     user = None
 
     while(users):
@@ -100,7 +104,7 @@ print(f"Apis : {len(apis)}")
 
 # Connect to DB
 connection = psycopg2.connect(
-    database="polyzer", user="evank", host="localhost")
+    database=config.db_name, user=config.db_user, host=config.db_host)
 cur = connection.cursor()
 
 # Fetch input user (root)

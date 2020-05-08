@@ -2,16 +2,20 @@ import seaborn as sns
 import pandas as pd
 import psycopg2
 import matplotlib.pyplot as plt
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config  # nopep8
 
 
-sns.set(style="white", palette="muted", color_codes=True)
+sns.set(style="white", color_codes=True)
 # Set up the matplotlib figure
 f, axes = plt.subplots(1, 2, figsize=(7, 7), sharex=True)
 
 
 # Connect to DB
 connection = psycopg2.connect(
-    database="polyzer", user="evank", host="localhost")
+    database=config.db_name, user=config.db_user, host=config.db_host, password=config.db_password)
 cur = connection.cursor()
 print(connection)
 
@@ -34,12 +38,12 @@ nd_df = pd.DataFrame(neademokratia_users, columns=[
 
 syriza_friends = syriza_df['friends_count']
 syriza_friends_limit = syriza_friends.loc[syriza_df['friends_count'] < 300]
-sns.distplot(syriza_friends_limit, color="r",
+sns.distplot(syriza_friends_limit, color="red",
              kde=False, ax=axes[0]).set_title("@syriza_gr")
 
 nd_friends = nd_df['friends_count']
 nd_friends_limit = nd_friends.loc[nd_df['friends_count'] < 300]
-sns.distplot(nd_friends_limit, color="b", kde=False,
+sns.distplot(nd_friends_limit, color="blue", kde=False,
              ax=axes[1]).set_title("@neademokratia")
 
 
