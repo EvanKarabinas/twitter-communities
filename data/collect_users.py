@@ -8,7 +8,7 @@ import threading
 import os
 import sys
 import inspect
-sys.path.append(os.path.abspath(os.path.join('..', 'config')))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config  # nopep8
 
 
@@ -104,7 +104,7 @@ print(f"Apis : {len(apis)}")
 
 # Connect to DB
 connection = psycopg2.connect(
-    database=config.db_name, user=config.db_user, host=config.db_host)
+    database=config.db_name, user=config.db_user, host=config.db_host, password=config.db_password)
 cur = connection.cursor()
 
 # Fetch input user (root)
