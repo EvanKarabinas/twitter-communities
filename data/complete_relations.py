@@ -1,11 +1,17 @@
-import config
+
 import tweepy
 import csv
 import time
 import timeformatter as tf
 import sys
 import threading
+import os
 from blessings import Terminal
+import psycopg2
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config  # nopep8
+
+space = 69*' '
 
 
 class User:
@@ -22,70 +28,116 @@ class User:
 
 def print_header(thread_id):
     global term
-    print(term.move(thread_id*10, 0))
-    print(term.white + term.on_black +
+    xoffset = 0
+    yoffset = thread_id*10
+
+    if(thread_id >= 5):
+        xoffset = 70
+        yoffset = (thread_id-5)*10
+    if(thread_id >= 10):
+        xoffset = 140
+        yoffset = (thread_id-10)*10
+
+    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset)+term.white + term.on_bright_black +
           f"  Thread {thread_id}  " + term.normal)
 
 
 def print_current_user_check_bar(thread_id, user):
     global term
-    print(term.clear_eol+term.move(thread_id*10+2, 4) +
-          f"{term.black}Currently checking user - {term.white} {term.bold}{user.name}{term.normal}")
+    xoffset = 4
+    yoffset = thread_id*10+2
+
+    if(thread_id >= 5):
+        xoffset = 74
+        yoffset = (thread_id-5)*10+2
+    if(thread_id >= 10):
+        xoffset = 144
+        yoffset = (thread_id-10)*10+2
+
+    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
+          f"{term.bright_black}Currently checking user - {term.white} {term.bold}{user.name}{term.normal}")
 
 
 def print_status_bar(thread_id, msg, type):
     global term
+    xoffset = 4
+    yoffset = thread_id*10+3
+
+    if(thread_id >= 5):
+        xoffset = 74
+        yoffset = (thread_id-5)*10+3
+    if(thread_id >= 10):
+        xoffset = 144
+        yoffset = (thread_id-10)*10+3
+
     if(type == 'success'):
-        print(term.move(thread_id*10+3, 4) + term.black+"Status: "+term.green +
+        print(term.move(yoffset, xoffset)+space + term.move(yoffset, xoffset) + term.bright_black+"Status: "+term.green +
               msg + term.normal)
     elif(type == 'error'):
-        print(term.move(thread_id*10+3, 4) + term.black+"Status: "+term.red +
+        print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) + term.bright_black+"Status: "+term.red +
               msg + term.normal)
 
 
 def print_pogress_bar(thread_id, user_index, batch_size):
+    xoffset = 4
+    yoffset = thread_id*10+4
+
+    if(thread_id >= 5):
+        xoffset = 74
+        yoffset = (thread_id-5)*10+4
+    if(thread_id >= 10):
+        xoffset = 144
+        yoffset = (thread_id-10)*10+4
+
     global term
-    print(term.move(thread_id*10+4, 4) +
-          f"{term.black}Checked users:\t{term.cyan}{user_index}/{batch_size}{term.black}." + term.normal)
+    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
+          f"{term.bright_black}Checked users:\t{term.cyan}{user_index}/{batch_size}{term.bright_black}." + term.normal)
 
 
-def print_estimated_time_bar(thread_id, user_index, batch_size):
+def print_estimated_time_bar(thread_id, user_index, batch_size, avg_friends):
     global term
-    remaining_time_minutes = (batch_size - user_index)
+    xoffset = 4
+    yoffset = thread_id*10+5
+
+    if(thread_id >= 5):
+        xoffset = 74
+        yoffset = (thread_id-5)*10+5
+    if(thread_id >= 10):
+        xoffset = 144
+        yoffset = (thread_id-10)*10+5
+
+    remaining_time_minutes = (batch_size - user_index)*(avg_friends/200)
     if(remaining_time_minutes >= 60):
         time_string = f"{remaining_time_minutes//60} h. {remaining_time_minutes%60} min."
     else:
         time_string = f"{remaining_time_minutes} min."
 
-    print(term.move(thread_id*10+5, 4) +
-          f"{term.black}Estimated time:\t{term.cyan}{time_string}" + term.normal)
+    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
+          f"{term.bright_black}Estimated time:\t{term.cyan}{time_string}" + term.normal)
 
 
-def extract_users(input_file):
+def extract_users(cur, graph_name, max_friends):
     users = list()
-    user_ids = list()
 
-    file_headers = input_file.readline()
-    for line in input_file:
-        followee_id, followee_name, follower_id, follower_name = [element.strip() for element in line.split(
-            ",")]
+    cur.execute("SELECT * FROM twitter_user WHERE graph_name = %s AND friends_count < %s",
+                (graph_name, max_friends,))
+    db_users = cur.fetchall()
 
-        if(followee_id not in user_ids):
-            followee = User(followee_id, followee_name)
-            users.append(followee)
-            user_ids.append(followee_id)
-        if(follower_id not in user_ids):
-            follower = User(follower_id, follower_name)
-            users.append(follower)
-            user_ids.append(follower_id)
-    return users
+    for db_user in db_users:
+        user = User(db_user[0], db_user[1])
+        users.append(user)
+
+    cur.execute("SELECT avg(friends_count) FROM twitter_user WHERE graph_name = %s AND friends_count < %s",
+                (graph_name, max_friends))
+    avg_friends = cur.fetchone()
+    return users, int(avg_friends[0])
 
 
 def fetch_friends(user, api, thread_id):
     friends = list()
     try:
         for fetched_friend in tweepy.Cursor(api.friends, id=user.id, count=200).items():
-            friend = User(fetched_friend.id, fetched_friend.screen_name)
+            friend = User(fetched_friend.id_str, fetched_friend.screen_name)
             friends.append(friend)
             with term_print_lock:
                 print_status_bar(
@@ -98,40 +150,40 @@ def fetch_friends(user, api, thread_id):
     return friends
 
 
-def save_to_csv(csv_writer, user, friends, users):
+def save_to_db(db_connection, user, friends, users, graph_name):
+    cur = db_connection.cursor()
     for friend in friends:
         for other_user in users:
             if(friend.id == other_user.id):
-                row = [str(friend.id), str(friend.name),
-                       str(user.id), str(user.name)]
-                csv_writer.writerow(row)
+                cur.execute(
+                    "INSERT INTO followship (follower_id,followee_id,graph_name) VALUES(%s,%s,%s) ON CONFLICT DO NOTHING", (user.id, friend.id, graph_name))
+                db_connection.commit()
 
 
-def complete_relations(thread_id, users, batch_size, api, file_name):
+def complete_relations(thread_id, users, batch_size, api, avg_friends, graph_name):
+
+    connection = psycopg2.connect(
+        database=config.db_name, user=config.db_user, host=config.db_host, password=config.db_password)
 
     with term_print_lock:
         print_header(thread_id)
 
-    with open(f"{file_name}_thread{thread_id}_complete.csv", 'w') as output_csv:
-        csv_writer = csv.writer(output_csv)
+    users_batch = users[(thread_id * batch_size):(thread_id * batch_size + batch_size-1)]
 
-        users_batch = users[(thread_id * batch_size): (thread_id * batch_size + batch_size-1)]
+    for user_index, user in enumerate(users_batch):
+        with term_print_lock:
+            print_current_user_check_bar(thread_id, user)
+            print_status_bar(
+                thread_id, "-", "success")
+            print_pogress_bar(thread_id, user_index, batch_size)
+            print_estimated_time_bar(
+                thread_id, user_index, batch_size, avg_friends)
 
-        for user_index, user in enumerate(users_batch):
-            with term_print_lock:
-                print_current_user_check_bar(thread_id, user)
-                print_status_bar(
-                    thread_id, "-", "success")
-                print_pogress_bar(thread_id, user_index, batch_size)
-                print_estimated_time_bar(thread_id, user_index, batch_size)
-
-            friends = fetch_friends(user, api, thread_id)
-            save_to_csv(csv_writer, user, friends, users)
-            output_csv.flush()
+        friends = fetch_friends(user, api, thread_id)
+        save_to_db(connection, user, friends, users, graph_name)
 
 
-input_file = sys.argv[1]
-output_file_name = input_file.split(".")[0]
+graph_name = sys.argv[1]
 threads_num = int(sys.argv[2])
 
 auths = []
@@ -144,11 +196,20 @@ for i in range(threads_num):
 
 start_time = time.time()
 
-field_names = ["followee_id", "followee_name", "follower_id", "follower_name"]
+# Connect to DB
+connection = psycopg2.connect(
+    database=config.db_name, user=config.db_user, host=config.db_host, password=config.db_password)
+cur = connection.cursor()
+
+cur.execute("DELETE FROM followship WHERE graph_name = %s", (graph_name,))
+rows_deleted = cur.rowcount
+print(
+    f"Deleted ({rows_deleted}) twitter users that belong to graph {graph_name}.")
+connection.commit()
 
 users = list()
-with open(f"output_files/{input_file}", 'r') as followers_csv:
-    users = extract_users(followers_csv)
+
+users, avg_friends = extract_users(cur, graph_name, 2000)
 # for user in users:
 #     print(user)
 # sys.exit(0)
@@ -161,7 +222,7 @@ print(term.enter_fullscreen)
 
 for index in range(len(apis)):
     t = threading.Thread(target=complete_relations,
-                         args=(index, users, batch_size, apis[index], output_file_name))
+                         args=(index, users, batch_size, apis[index], avg_friends, graph_name))
     threads.append(t)
     t.start()
 
@@ -171,4 +232,5 @@ for index, thread in enumerate(threads):
 
 
 end_time = time.time()
+
 # print(tf.format(start_time, end_time))
