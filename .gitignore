@@ -1,0 +1,8 @@
+env/
+.vscode/
+config.py
+__pycache__/
+followgraph.py
+notes.md
+TODO.md
+.DS_Store
