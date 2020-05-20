@@ -204,7 +204,7 @@ cur = connection.cursor()
 cur.execute("DELETE FROM followship WHERE graph_name = %s", (graph_name,))
 rows_deleted = cur.rowcount
 print(
-    f"Deleted ({rows_deleted}) twitter users that belong to graph {graph_name}.")
+    f"Deleted ({rows_deleted}) followships that belong to graph {graph_name}.")
 connection.commit()
 
 users = list()
