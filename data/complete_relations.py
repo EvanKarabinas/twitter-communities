@@ -177,7 +177,7 @@ def complete_relations(thread_id, users, batch_size, api, avg_friends, graph_nam
                 thread_id, "-", "success")
             print_pogress_bar(thread_id, user_index, batch_size)
             print_estimated_time_bar(
-                thread_id, user_index, batch_size, avg_friends)
+                thread_id, user_index, batch_size, avg_friends, 1)
 
         friends = fetch_friends(user, api, thread_id)
         save_to_db(connection, user, friends, users, graph_name)
