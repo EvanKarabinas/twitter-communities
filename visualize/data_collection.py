@@ -37,12 +37,12 @@ nd_df = pd.DataFrame(neademokratia_users, columns=[
 
 
 syriza_friends = syriza_df['friends_count']
-syriza_friends_limit = syriza_friends.loc[syriza_df['friends_count'] < 300]
+syriza_friends_limit = syriza_friends.loc[syriza_df['friends_count'] < 4000]
 sns.distplot(syriza_friends_limit, color="red",
              kde=False, ax=axes[0]).set_title("@syriza_gr")
 
 nd_friends = nd_df['friends_count']
-nd_friends_limit = nd_friends.loc[nd_df['friends_count'] < 300]
+nd_friends_limit = nd_friends.loc[nd_df['friends_count'] < 4000]
 sns.distplot(nd_friends_limit, color="blue", kde=False,
              ax=axes[1]).set_title("@neademokratia")
 

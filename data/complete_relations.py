@@ -1,4 +1,4 @@
-
+from pretty_print import *
 import tweepy
 import csv
 import time
@@ -26,94 +26,94 @@ class User:
         return self.id == other.id
 
 
-def print_header(thread_id):
-    global term
-    xoffset = 0
-    yoffset = thread_id*10
+# def print_header(thread_id):
+#     global term
+#     xoffset = 0
+#     yoffset = thread_id*10
 
-    if(thread_id >= 5):
-        xoffset = 70
-        yoffset = (thread_id-5)*10
-    if(thread_id >= 10):
-        xoffset = 140
-        yoffset = (thread_id-10)*10
+#     if(thread_id >= 5):
+#         xoffset = 70
+#         yoffset = (thread_id-5)*10
+#     if(thread_id >= 10):
+#         xoffset = 140
+#         yoffset = (thread_id-10)*10
 
-    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset)+term.white + term.on_bright_black +
-          f"  Thread {thread_id}  " + term.normal)
-
-
-def print_current_user_check_bar(thread_id, user):
-    global term
-    xoffset = 4
-    yoffset = thread_id*10+2
-
-    if(thread_id >= 5):
-        xoffset = 74
-        yoffset = (thread_id-5)*10+2
-    if(thread_id >= 10):
-        xoffset = 144
-        yoffset = (thread_id-10)*10+2
-
-    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
-          f"{term.bright_black}Currently checking user - {term.white} {term.bold}{user.name}{term.normal}")
+#     print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset)+term.white + term.on_bright_black +
+#           f"  Thread {thread_id}  " + term.normal)
 
 
-def print_status_bar(thread_id, msg, type):
-    global term
-    xoffset = 4
-    yoffset = thread_id*10+3
+# def print_current_user_check_bar(thread_id, user):
+#     global term
+#     xoffset = 4
+#     yoffset = thread_id*10+2
 
-    if(thread_id >= 5):
-        xoffset = 74
-        yoffset = (thread_id-5)*10+3
-    if(thread_id >= 10):
-        xoffset = 144
-        yoffset = (thread_id-10)*10+3
+#     if(thread_id >= 5):
+#         xoffset = 74
+#         yoffset = (thread_id-5)*10+2
+#     if(thread_id >= 10):
+#         xoffset = 144
+#         yoffset = (thread_id-10)*10+2
 
-    if(type == 'success'):
-        print(term.move(yoffset, xoffset)+space + term.move(yoffset, xoffset) + term.bright_black+"Status: "+term.green +
-              msg + term.normal)
-    elif(type == 'error'):
-        print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) + term.bright_black+"Status: "+term.red +
-              msg + term.normal)
+#     print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
+#           f"{term.bright_black}Currently checking user - {term.white} {term.bold}{user.name}{term.normal}")
 
 
-def print_pogress_bar(thread_id, user_index, batch_size):
-    xoffset = 4
-    yoffset = thread_id*10+4
+# def print_status_bar(thread_id, msg, type):
+#     global term
+#     xoffset = 4
+#     yoffset = thread_id*10+3
 
-    if(thread_id >= 5):
-        xoffset = 74
-        yoffset = (thread_id-5)*10+4
-    if(thread_id >= 10):
-        xoffset = 144
-        yoffset = (thread_id-10)*10+4
+#     if(thread_id >= 5):
+#         xoffset = 74
+#         yoffset = (thread_id-5)*10+3
+#     if(thread_id >= 10):
+#         xoffset = 144
+#         yoffset = (thread_id-10)*10+3
 
-    global term
-    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
-          f"{term.bright_black}Checked users:\t{term.cyan}{user_index}/{batch_size}{term.bright_black}." + term.normal)
+#     if(type == 'success'):
+#         print(term.move(yoffset, xoffset)+space + term.move(yoffset, xoffset) + term.bright_black+"Status: "+term.green +
+#               msg + term.normal)
+#     elif(type == 'error'):
+#         print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) + term.bright_black+"Status: "+term.red +
+#               msg + term.normal)
 
 
-def print_estimated_time_bar(thread_id, user_index, batch_size, avg_friends):
-    global term
-    xoffset = 4
-    yoffset = thread_id*10+5
+# def print_pogress_bar(thread_id, user_index, batch_size):
+#     xoffset = 4
+#     yoffset = thread_id*10+4
 
-    if(thread_id >= 5):
-        xoffset = 74
-        yoffset = (thread_id-5)*10+5
-    if(thread_id >= 10):
-        xoffset = 144
-        yoffset = (thread_id-10)*10+5
+#     if(thread_id >= 5):
+#         xoffset = 74
+#         yoffset = (thread_id-5)*10+4
+#     if(thread_id >= 10):
+#         xoffset = 144
+#         yoffset = (thread_id-10)*10+4
 
-    remaining_time_minutes = (batch_size - user_index)*(avg_friends/200)
-    if(remaining_time_minutes >= 60):
-        time_string = f"{remaining_time_minutes//60} h. {remaining_time_minutes%60} min."
-    else:
-        time_string = f"{remaining_time_minutes} min."
+#     global term
+#     print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
+#           f"{term.bright_black}Checked users:\t{term.cyan}{user_index}/{batch_size}{term.bright_black}." + term.normal)
 
-    print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
-          f"{term.bright_black}Estimated time:\t{term.cyan}{time_string}" + term.normal)
+
+# def print_estimated_time_bar(thread_id, user_index, batch_size, avg_friends):
+#     global term
+#     xoffset = 4
+#     yoffset = thread_id*10+5
+
+#     if(thread_id >= 5):
+#         xoffset = 74
+#         yoffset = (thread_id-5)*10+5
+#     if(thread_id >= 10):
+#         xoffset = 144
+#         yoffset = (thread_id-10)*10+5
+
+#     remaining_time_minutes = (batch_size - user_index)*(avg_friends/200)
+#     if(remaining_time_minutes >= 60):
+#         time_string = f"{remaining_time_minutes//60} h. {remaining_time_minutes%60} min."
+#     else:
+#         time_string = f"{remaining_time_minutes} min."
+
+#     print(term.move(yoffset, xoffset) + space + term.move(yoffset, xoffset) +
+#           f"{term.bright_black}Estimated time:\t{term.cyan}{time_string}" + term.normal)
 
 
 def extract_users(cur, graph_name, max_friends):
@@ -216,9 +216,10 @@ users, avg_friends = extract_users(cur, graph_name, 2000)
 threads = list()
 batch_size = int(len(users)/threads_num)
 term_print_lock = threading.Lock()
-term = Terminal()
+#term = Terminal()
 
-print(term.enter_fullscreen)
+# print(term.enter_fullscreen)
+init_pretty_print()
 
 for index in range(len(apis)):
     t = threading.Thread(target=complete_relations,
